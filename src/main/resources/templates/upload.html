@@ -10,22 +10,35 @@
         <label>
             bucketName:
             <input type="text" id="bucketName" name="bucketName" />
-        </label>
+        </label><br/>
         <input type="file" name="file" /><br/>
         <input type="button" value="上传" onclick="post()"/>
     </form>
     <script>
         var post = function () {
             var form = new FormData(document.getElementById("f"));
-            console.log(form.get("bucketName"));
+            if(form.get("bucketName").length<=3){
+                alert("bucketName太短!");
+                return;
+            }
             $.ajax({
                 type: "post",
                 url: form.get("bucketName"),
                 data: form,
                 contentType: false,
-                processData:false,
+                processData: false,
+                beforeSend: function(){
+                    $("input").attr('disabled',"true");
+                },
                 success: function () {
                     alert("上传成功!");
+                },
+                error: function (data) {
+                    console.log(data.responseJSON.message);
+                    alert(data.responseJSON.message);
+                },
+                complete: function () {
+                    $("input").removeAttr('disabled');
                 }
             });
         }

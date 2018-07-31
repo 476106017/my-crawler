@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:v-bind="http://www.w3.org/1999/xhtml">
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>对象页</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+</head>
+<body>
+
+    <div id="app">
+        <ol>
+            <li v-for="ob in obs">
+                <a v-bind:href="bk+'/'+ob" v-html="ob" target="_blank"></a>
+            </li>
+        </ol>
+    </div>
+    <script>
+
+        var vue = new Vue({
+            el: '#app',
+            data: {
+                bk: '',
+                obs: []
+            },
+            created: function(){
+                var _self=this;
+                var bk = window.location.pathname;
+                var index = bk .lastIndexOf("v/");
+                bk  = bk .substring(index + 1, bk .length);
+                this.bk = bk;
+                $.get(bk , function(data){
+                    _self.obs = data;
+                });
+            }
+        })
+    </script>
+</body>
+</html>

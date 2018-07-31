@@ -27,11 +27,6 @@ public class OSSController {
     @Autowired
     private OSS oss;
 
-    @GetMapping("/upload")
-    public ModelAndView upload(){
-        return new ModelAndView("upload.html");
-    }
-
     @PostMapping("/{bucketName}")
     public String  postFile(@PathVariable("bucketName")String bucketName,MultipartFile file) throws IOException{
         if(!oss.doesBucketExist(bucketName))
@@ -69,9 +64,9 @@ public class OSSController {
     @GetMapping("/")
     public List<String> getRoot(){
         return oss.listBuckets()
-                .stream().map(p->"/"+p.getName()+"/").collect(Collectors.toList());
+                .stream().map(p->"/"+p.getName()).collect(Collectors.toList());
     }
-    @GetMapping("/{bucketName}/")
+    @GetMapping({"/{bucketName}"})
     public List<String> getBucket(@PathVariable("bucketName")String bucketName){
         if(!oss.doesBucketExist(bucketName)) return null;
         return getBucketFileNames(bucketName);

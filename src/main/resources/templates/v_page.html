@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:v-bind="http://www.w3.org/1999/xhtml">
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Bucket页</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+</head>
+<body>
+
+    <div id="app">
+        <ol>
+            <li v-for="bk in bks">
+                <a v-bind:href="'v'+bk" v-html="bk" target="_blank"></a>
+            </li>
+        </ol>
+
+        <a href="upload" target="_blank">上传文件</a>
+    </div>
+    <script>
+        var vue = new Vue({
+            el: '#app',
+            data: {
+                bks: []
+            },
+            created: function(){
+                var _self=this;
+                $.get("/",function(data){
+                    _self.bks = data;
+                });
+            }
+        })
+    </script>
+</body>
+</html>
