@@ -1,0 +1,4 @@
+oss:
+  endpoint: oss-cn-shenzhen-internal.aliyuncs.com
+  accessKeyId: 这是内网访问的配置,你买台阿里ecs服务器,就可以享受内网免费流量
+  accessKeySecret: 这是内网访问的配置,你买台阿里ecs服务器,就可以享受内网免费流量

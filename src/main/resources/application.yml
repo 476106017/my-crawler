@@ -1,0 +1,8 @@
+spring:
+  profiles:
+    active: intra
+
+server:
+  port: 8998
+logging:
+  file: oss.log

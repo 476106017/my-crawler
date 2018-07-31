@@ -1,0 +1,4 @@
+oss:
+  endpoint: oss-cn-shenzhen.aliyuncs.com
+  accessKeyId: 这是外网访问的配置,没什么意义,测试用
+  accessKeySecret: 这是外网访问的配置,没什么意义,测试用
