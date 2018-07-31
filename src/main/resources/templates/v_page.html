@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:v-bind="http://www.w3.org/1999/xhtml">
+<html lang="en" xmlns:v-bind="http://www.w3.org/1999/xhtml" xmlns:v-on="http://www.w3.org/1999/xhtml">
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -13,6 +13,7 @@
         <ol>
             <li v-for="bk in bks">
                 <a v-bind:href="'v'+bk" v-html="bk" target="_blank"></a>
+                <a href="#" v-on:click="del(bk)">删除</a>
             </li>
         </ol>
 
@@ -29,6 +30,23 @@
                 $.get("/",function(data){
                     _self.bks = data;
                 });
+            },
+            methods: {
+                del: function (bk) {
+                    if(confirm('确认删除?'))
+                        $.ajax({
+                            type: "delete",
+                            url: bk,
+                            success: function () {
+                                alert("删除成功!");
+                                window.location.reload();
+                            },
+                            error: function (data) {
+                                console.log(data.responseJSON.message);
+                                alert(data.responseJSON.message);
+                            }
+                        });
+                }
             }
         })
     </script>
