@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>上传文件</title>
+    <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+</head>
+<body>
+    <form id="f">
+        <label>
+            bucketName:
+            <input type="text" id="bucketName" name="bucketName" />
+        </label>
+        <input type="file" name="file" /><br/>
+        <input type="button" value="上传" onclick="post()"/>
+    </form>
+    <script>
+        var post = function () {
+            var form = new FormData(document.getElementById("f"));
+            console.log(form.get("bucketName"));
+            $.ajax({
+                type: "post",
+                url: form.get("bucketName"),
+                data: form,
+                contentType: false,
+                processData:false,
+                success: function () {
+                    alert("上传成功!");
+                }
+            });
+        }
+    </script>
+</body>
+</html>

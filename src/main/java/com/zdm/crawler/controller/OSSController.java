@@ -9,10 +9,12 @@ import org.apache.http.HttpResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletResponse;
+import javax.swing.*;
 import java.io.*;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,6 +26,11 @@ public class OSSController {
 
     @Autowired
     private OSS oss;
+
+    @GetMapping("/upload")
+    public ModelAndView upload(){
+        return new ModelAndView("upload.html");
+    }
 
     @PostMapping("/{bucketName}")
     public String  postFile(@PathVariable("bucketName")String bucketName,MultipartFile file) throws IOException{
@@ -54,6 +61,7 @@ public class OSSController {
         metadata.setContentDisposition("filename/filesize=" + fileName + "/" + fileSize + "Byte.");
         //上传文件   (上传文件流的形式)
         PutObjectResult putResult = oss.putObject(bucketName, fileName, is, metadata);
+        is.close();
         //解析结果
         return putResult.getETag();
     }
@@ -61,15 +69,17 @@ public class OSSController {
     @GetMapping("/")
     public List<String> getRoot(){
         return oss.listBuckets()
-                .stream().map(Bucket::getName).collect(Collectors.toList());
+                .stream().map(p->"/"+p.getName()+"/").collect(Collectors.toList());
     }
-    @GetMapping("/{bucketName}")
+    @GetMapping("/{bucketName}/")
     public List<String> getBucket(@PathVariable("bucketName")String bucketName){
+        if(!oss.doesBucketExist(bucketName)) return null;
         return getBucketFileNames(bucketName);
     }
     @GetMapping("/{bucketName}/{key}")
     public void  getFile(@PathVariable("bucketName")String bucketName, @PathVariable("key") String key,
                           HttpServletResponse response) throws IOException {
+        if(!oss.doesObjectExist(bucketName,key)) return;
         OSSObject object = oss.getObject(bucketName,key);
 
         ObjectMetadata metadata = object.getObjectMetadata();
@@ -87,17 +97,24 @@ public class OSSController {
 
     @DeleteMapping("/{bucketName}/{key}")
     public void  delFile(@PathVariable("bucketName")String bucketName, @PathVariable("key") String key){
+        if(!oss.doesBucketExist(bucketName)) return;
         oss.deleteObject(bucketName,key);
     }
     @DeleteMapping("/{bucketName}")
     public void  delBucket(@PathVariable("bucketName")String bucketName){
+        if(!oss.doesBucketExist(bucketName)) return;
         oss.deleteBucket(bucketName);
     }
     @DeleteMapping("/force/{bucketName}")
     public void  delBucketForce(@PathVariable("bucketName")String bucketName){
+        if(!oss.doesBucketExist(bucketName)) return;
         DeleteObjectsRequest request = new DeleteObjectsRequest(bucketName);
-        request.setKeys(getBucketFileNames(bucketName));
-        oss.deleteBucket(request);
+        List<String> bucketFileNames = getBucketFileNames(bucketName);
+        if (!bucketFileNames.isEmpty()) {
+            request.setKeys(bucketFileNames);
+            oss.deleteObjects(request);
+        }
+        oss.deleteBucket(bucketName);
     }
 
     private String getContentType(String fileName){

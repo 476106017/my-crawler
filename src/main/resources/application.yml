@@ -1,6 +1,12 @@
 spring:
   profiles:
-    active: intra
+    active: inter
+  thymeleaf:
+    cache: false
+  servlet:
+    multipart:
+      max-file-size: 1024MB
+      max-request-size: 1024MB
 
 server:
   port: 8998
