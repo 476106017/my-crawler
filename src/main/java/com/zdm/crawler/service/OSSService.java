@@ -57,18 +57,18 @@ public class OSSService {
 
         //以输入流的形式上传文件
         InputStream is;
+        int size;
         try {
             URLConnection urlConnection = url.openConnection();
             urlConnection.setRequestProperty("referer", "https://www.pixiv.net/ranking.php?mode=daily&content=illust");
             is = urlConnection.getInputStream();
+            size = urlConnection.getHeaderFieldInt("Content-Length", -1);
         } catch (IOException e) { e.printStackTrace();return; }
         //文件名
         //创建上传Object的Metadata
         ObjectMetadata metadata = new ObjectMetadata();
         //上传的文件的长度
-        try {
-            metadata.setContentLength(is.available());
-        } catch (IOException e) { e.printStackTrace(); }
+        metadata.setContentLength(size);
         //指定该Object下设置Header
         metadata.setHeader("Pragma", "no-cache");
         //指定该Object被下载时的内容编码格式

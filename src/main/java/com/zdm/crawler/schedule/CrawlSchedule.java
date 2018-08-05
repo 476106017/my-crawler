@@ -37,7 +37,7 @@ public class CrawlSchedule {
     final static String RANKING = "https://www.pixiv.net/ranking.php?mode=daily&content=illust";
 
     ThreadPoolExecutor executor = new ThreadPoolExecutor(
-            4, 8,1,TimeUnit.HOURS,new LinkedBlockingDeque());
+            10, 20,1,TimeUnit.HOURS,new LinkedBlockingDeque());
 
     @Scheduled(cron = "0 0 23 * * ?")
     @GetMapping("crawl")
@@ -71,9 +71,11 @@ public class CrawlSchedule {
             PhantomJSDriver dv2 = new PhantomJSDriver(caps);
             dv2.get(href);
             String pageSource = dv2.getPageSource();
+            dv2.close();
             executor.execute(new UploadThread(pageSource));
         });
 
+        dv.close();
     }
 
 
