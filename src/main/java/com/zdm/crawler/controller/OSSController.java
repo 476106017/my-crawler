@@ -64,12 +64,12 @@ public class OSSController {
     @GetMapping("/")
     public List<String> getRoot(){
         return oss.listBuckets()
-                .stream().map(p->"/"+p.getName()).collect(Collectors.toList());
+                .stream().map(p->"/"+p.getName()).sorted(String::compareTo).collect(Collectors.toList());
     }
     @GetMapping({"/{bucketName}"})
-    public List<String> getBucket(@PathVariable("bucketName")String bucketName){
+    public List<OSSObjectSummary> getBucket(@PathVariable("bucketName")String bucketName){
         if(!oss.doesBucketExist(bucketName)) return null;
-        return getBucketFileNames(bucketName);
+        return oss.listObjects(bucketName).getObjectSummaries();
     }
     @GetMapping("/{bucketName}/{key}")
     public void  getFile(@PathVariable("bucketName")String bucketName, @PathVariable("key") String key,

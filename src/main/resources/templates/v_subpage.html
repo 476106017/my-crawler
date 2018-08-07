@@ -10,15 +10,19 @@
 <body>
 
     <div id="app">
-        <ol>
-            <li v-for="ob in obs">
-                <a v-bind:href="bk+'/'+ob" v-html="ob" target="_blank"></a>
-                <a href="#" v-on:click="del(bk,ob)">删除</a>
-            </li>
-        </ol>
+        <table>
+            <tr v-for="ob in obs">
+                <td><a v-bind:href="bk+'/'+ob.key" target="_blank">{{ob.key}}</a></td>
+                <td>{{bytesToSize(ob.size)}}</td>
+                <td>{{ob.lastModified|time}}</td>
+                <td><a href="#" v-on:click="del(bk,ob.key)">删除</a></td>
+            </tr>
+        </table>
     </div>
     <script>
-
+        Vue.filter('time',function (value) {
+            return new Date(value).toLocaleString().replace(/年|月/g, "-").replace(/日/g, " ");
+        });
         var vue = new Vue({
             el: '#app',
             data: {
@@ -46,6 +50,14 @@
                                 window.location.reload();
                             }
                         });
+                },
+                bytesToSize: function (bytes) {
+                    if (bytes === 0) return '0 B';
+                    var k = 1000, // or 1024
+                        sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'],
+                        i = Math.floor(Math.log(bytes) / Math.log(k));
+
+                    return (bytes / Math.pow(k, i)).toPrecision(3) + ' ' + sizes[i];
                 }
             }
         })

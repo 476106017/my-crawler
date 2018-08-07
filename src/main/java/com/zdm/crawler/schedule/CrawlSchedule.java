@@ -1,6 +1,7 @@
 package com.zdm.crawler.schedule;
 
 import com.aliyun.oss.OSS;
+import com.google.common.collect.Lists;
 import com.google.common.escape.Escapers;
 import com.zdm.crawler.service.OSSService;
 import org.openqa.selenium.By;
@@ -24,6 +25,8 @@ import java.util.*;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Configuration
 @Controller
@@ -34,9 +37,9 @@ public class CrawlSchedule {
     @Autowired
     private OSSService ossService;
 
-    final static String RANKING = "https://www.pixiv.net/ranking.php?mode=daily&content=illust";
+    private final static String RANKING = "https://www.pixiv.net/ranking.php?mode=daily&content=illust";
 
-    ThreadPoolExecutor executor = new ThreadPoolExecutor(
+    private ThreadPoolExecutor executor = new ThreadPoolExecutor(
             10, 20,1,TimeUnit.HOURS,new LinkedBlockingDeque());
 
     @Scheduled(cron = "0 0 23 * * ?")
@@ -62,20 +65,19 @@ public class CrawlSchedule {
 
         PhantomJSDriver dv = new PhantomJSDriver(caps);
         dv.get(RANKING);
-        List<WebElement> pages = dv.findElements(By.className("_work"));
-        if (pages == null)
+        List<WebElement> elements = dv.findElements(By.className("_work"));
+        if (elements==null)
             throw new NotFoundException("找不到排行榜页面");
+        List<String> hrefs = elements.stream()
+                .map(p->p.getAttribute("href")).collect(Collectors.toList());
 
-        pages.forEach(p -> {
-            String href = p.getAttribute("href");
-            PhantomJSDriver dv2 = new PhantomJSDriver(caps);
-            dv2.get(href);
-            String pageSource = dv2.getPageSource();
-            dv2.close();
+        hrefs.forEach(href -> {
+            dv.navigate().to(href);
+            String pageSource = dv.getPageSource();
             executor.execute(new UploadThread(pageSource));
         });
 
-        dv.close();
+        dv.quit();
     }
 
 
