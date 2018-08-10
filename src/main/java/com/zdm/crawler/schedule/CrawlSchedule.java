@@ -2,11 +2,10 @@ package com.zdm.crawler.schedule;
 
 import com.aliyun.oss.OSS;
 import com.google.common.collect.Lists;
-import com.google.common.escape.Escapers;
+import com.zdm.crawler.dao.IllustMapper;
 import com.zdm.crawler.service.OSSService;
 import org.openqa.selenium.By;
 import org.openqa.selenium.NotFoundException;
-import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.phantomjs.PhantomJSDriver;
 import org.openqa.selenium.phantomjs.PhantomJSDriverService;
@@ -17,23 +16,17 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Configuration
 @Controller
 public class CrawlSchedule {
 
-    @Autowired
-    private OSS oss;
     @Autowired
     private OSSService ossService;
 
@@ -42,13 +35,17 @@ public class CrawlSchedule {
     private ThreadPoolExecutor executor = new ThreadPoolExecutor(
             10, 20,1,TimeUnit.HOURS,new LinkedBlockingDeque());
 
+
+    @Autowired
+    private IllustMapper illustMapper;
+
     @Scheduled(cron = "0 0 23 * * ?")
     @GetMapping("crawl")
     public void crawl() {
         Capa caps = new Capa();
         caps.setCapability(
                 PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY,
-                "src/main/resources/phantomjs/phantomjs.exe");
+                "src/main/resources/phantomjs/phantomjs");
         caps.setting("loadImages", false);
         caps.setting("webSecurityEnabled", false);
         caps.setting("disk-cache", true);
@@ -57,29 +54,35 @@ public class CrawlSchedule {
         caps.setHeader("cookie", "PHPSESSID=12179525_1bd2a4cca1f0d26bb889af3930d00728;" +
                 "device_token=907aa0596d1a81fe155bba55761eb755; login_ever:yes;");
         caps.setHeader("connection", "keep-alive");
-        caps.setHeader("pragma", "no-cache");
-        caps.setHeader("cache-control", "no-cache");
         caps.setHeader("authority", "www.pixiv.net");
-        caps.setHeader("upgrade-insecure-requests", 1);
         caps.setHeader("referer", RANKING);
 
-        PhantomJSDriver dv = new PhantomJSDriver(caps);
-        dv.get(RANKING);
-        List<WebElement> elements = dv.findElements(By.className("_work"));
-        if (elements==null)
+        AtomicReference<PhantomJSDriver> dvr = new AtomicReference<>();
+        dvr.set(new PhantomJSDriver(caps));
+        dvr.get().get(RANKING);
+        List<WebElement> elements = dvr.get().findElements(By.className("_work"));
+        if (elements==null){
+            dvr.get().quit();
             throw new NotFoundException("找不到排行榜页面");
+        }
         List<String> hrefs = elements.stream()
                 .map(p->p.getAttribute("href")).collect(Collectors.toList());
+        dvr.get().quit();
 
         hrefs.forEach(href -> {
-            dv.navigate().to(href);
-            String pageSource = dv.getPageSource();
-            executor.execute(new UploadThread(pageSource));
+            dvr.set(new PhantomJSDriver(caps));
+            dvr.get().get(href);
+            String pageSource = dvr.get().getPageSource();
+            dvr.get().quit();
+            executor.submit(new UploadThread(pageSource));
+            try {
+                // 1秒应该能下完一张图,加上爬页面的时间
+                TimeUnit.SECONDS.sleep(1);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         });
-
-        dv.quit();
     }
-
 
 
     class Capa extends DesiredCapabilities{
@@ -103,10 +106,5 @@ public class CrawlSchedule {
         public void run() {
             ossService.upload(pageSource);
         }
-    }
-
-    public static void main(String[] args) throws UnsupportedEncodingException {
-        String input = "\u8f1d\u591c\u6708\u3061\u3083\u3093";
-        System.out.println();
     }
 }

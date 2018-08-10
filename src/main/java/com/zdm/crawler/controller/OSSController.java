@@ -1,20 +1,13 @@
 package com.zdm.crawler.controller;
 
 import com.aliyun.oss.OSS;
-import com.aliyun.oss.common.auth.DefaultCredentialProvider;
-import com.aliyun.oss.common.comm.DefaultServiceClient;
-import com.aliyun.oss.internal.OSSObjectOperation;
 import com.aliyun.oss.model.*;
 import org.apache.http.HttpResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.ModelAndView;
 
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletResponse;
-import javax.swing.*;
 import java.io.*;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -66,10 +59,13 @@ public class OSSController {
         return oss.listBuckets()
                 .stream().map(p->"/"+p.getName()).sorted(String::compareTo).collect(Collectors.toList());
     }
+    // 只取100条,上传时应该写入数据库分页
     @GetMapping({"/{bucketName}"})
     public List<OSSObjectSummary> getBucket(@PathVariable("bucketName")String bucketName){
         if(!oss.doesBucketExist(bucketName)) return null;
-        return oss.listObjects(bucketName).getObjectSummaries();
+        ObjectListing objects = oss.listObjects(bucketName);
+        objects.setMaxKeys(100);
+        return objects.getObjectSummaries();
     }
     @GetMapping("/{bucketName}/{key}")
     public void  getFile(@PathVariable("bucketName")String bucketName, @PathVariable("key") String key,

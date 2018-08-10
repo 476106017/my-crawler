@@ -29,4 +29,8 @@ public class CrawlerApplication {
 	public String vs(){
 		return "v_subpage.html";
 	}
+	@GetMapping("/i")
+	public String i(){
+		return "i_page.html";
+	}
 }

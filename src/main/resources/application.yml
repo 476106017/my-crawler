@@ -1,3 +1,6 @@
+server:
+  port: 8998
+
 spring:
   profiles:
     active: inter
@@ -7,8 +10,17 @@ spring:
     multipart:
       max-file-size: 1024MB
       max-request-size: 1024MB
+  datasource:
+    url: jdbc:mariadb://47.106.105.47:3306/illust
+    username: root
+    password: 471065
+    driver-class-name: org.mariadb.jdbc.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+    druid:
+      connection-init-sqls: set names utf8mb4
 
-server:
-  port: 8998
+mybatis:
+  configuration:
+    mapUnderscoreToCamelCase: true
 logging:
   file: oss.log
