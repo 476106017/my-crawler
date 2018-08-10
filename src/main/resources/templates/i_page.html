@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:v-bind="http://www.w3.org/1999/xhtml" xmlns:v-on="http://www.w3.org/1999/xhtml">
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Bucket页</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+</head>
+<body>
+
+    <div id="app">
+        <ol>
+            <li v-for="bk in bks">
+                <a v-bind:href="'zengdm-pixiv/'+bk.fileName" v-html="bk.name" target="_blank"></a>
+            </li>
+        </ol>
+        <template v-if="pinfo!=null">
+            <a @click='prePage' v-if="pinfo.hasPreviousPage">上一页</a>
+            第<b v-html="pinfo.pageNum"></b>页/共<b v-html="pinfo.pages"></b>页
+            <a @click='nextPage' v-if="pinfo.hasNextPage">下一页</a>
+        </template>
+    </div>
+    <script>
+        var vue = new Vue({
+            el: '#app',
+            data: {
+                bks: null,
+                pinfo: null,
+            },
+            created: function(){
+                this.getPn(1);
+            },
+            methods: {
+                prePage: function () {
+                    this.getPn(this.pinfo.prePage);
+                },
+                nextPage: function () {
+                    this.getPn(this.pinfo.nextPage);
+                },
+                getPn: function (pn) {
+                    var _self = this;
+                    $.get("/i/illusts?pn="+pn,function(data){
+                        _self.bks = data.result;
+                        _self.pinfo = data.pinfo;
+                    });
+                }
+            }
+        })
+    </script>
+</body>
+</html>
